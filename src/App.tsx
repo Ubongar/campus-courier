@@ -14,9 +14,12 @@ import Browse from "./pages/student/Browse";
 import VendorMenu from "./pages/student/VendorMenu";
 import Cart from "./pages/student/Cart";
 import Orders from "./pages/student/Orders";
+import StudentProfile from "./pages/student/Profile";
 
 // Vendor Pages
 import VendorDashboard from "./pages/vendor/Dashboard";
+import MenuManagement from "./pages/vendor/MenuManagement";
+import VendorOrders from "./pages/vendor/Orders";
 
 // Rider Pages
 import RiderDashboard from "./pages/rider/Dashboard";
@@ -85,9 +88,12 @@ const App = () => (
           <Route path="/student/vendor/:vendorId" element={<ProtectedRoute allowedRoles={["student"]}><VendorMenu /></ProtectedRoute>} />
           <Route path="/student/cart" element={<ProtectedRoute allowedRoles={["student"]}><Cart /></ProtectedRoute>} />
           <Route path="/student/orders" element={<ProtectedRoute allowedRoles={["student"]}><Orders /></ProtectedRoute>} />
+          <Route path="/student/profile" element={<ProtectedRoute allowedRoles={["student"]}><StudentProfile /></ProtectedRoute>} />
           
           {/* Vendor Routes */}
           <Route path="/vendor/dashboard" element={<ProtectedRoute allowedRoles={["vendor"]}><VendorDashboard /></ProtectedRoute>} />
+          <Route path="/vendor/menu" element={<ProtectedRoute allowedRoles={["vendor"]}><MenuManagement /></ProtectedRoute>} />
+          <Route path="/vendor/orders" element={<ProtectedRoute allowedRoles={["vendor"]}><VendorOrders /></ProtectedRoute>} />
           
           {/* Rider Routes */}
           <Route path="/rider/dashboard" element={<ProtectedRoute allowedRoles={["rider"]}><RiderDashboard /></ProtectedRoute>} />
