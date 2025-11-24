@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,10 +6,15 @@ import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { Bike, DollarSign, MapPin, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
+import DeliveryFlow from "./DeliveryFlow";
 
 export default function RiderDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [isFlowOpen, setIsFlowOpen] = useState(false);
 
   const { data: riderProfile } = useQuery({
     queryKey: ["rider-profile"],
@@ -66,23 +71,60 @@ export default function RiderDashboard() {
     enabled: !!riderProfile,
   });
 
-  const acceptDelivery = async (orderId: string) => {
-    if (!riderProfile) return;
+  // Real-time subscriptions
+  useEffect(() => {
+    const availableChannel = supabase
+      .channel("available-deliveries")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "orders",
+          filter: "status=eq.ready",
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["available-deliveries"] });
+        }
+      )
+      .subscribe();
 
-    const { error } = await supabase
-      .from("orders")
-      .update({
-        rider_id: riderProfile.user_id,
-        status: "assigned",
-      })
-      .eq("id", orderId);
+    return () => {
+      supabase.removeChannel(availableChannel);
+    };
+  }, [queryClient]);
 
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Success", description: "Delivery accepted" });
-    }
-  };
+  const acceptDeliveryMutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      if (!riderProfile) throw new Error("Rider profile not found");
+
+      // Generate OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+      const { error } = await supabase
+        .from("orders")
+        .update({
+          rider_id: riderProfile.user_id,
+          status: "assigned" as any,
+          otp_code: otp,
+        })
+        .eq("id", orderId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["available-deliveries"] });
+      queryClient.invalidateQueries({ queryKey: ["my-deliveries"] });
+      toast({ title: "Delivery accepted successfully!" });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
@@ -156,7 +198,7 @@ export default function RiderDashboard() {
                         <MapPin className="h-4 w-4" />
                         <span>{order.delivery_location}</span>
                       </div>
-                      <Button onClick={() => acceptDelivery(order.id)} className="w-full">
+                      <Button onClick={() => acceptDeliveryMutation.mutate(order.id)} className="w-full">
                         Accept Delivery
                       </Button>
                     </div>
@@ -176,13 +218,20 @@ export default function RiderDashboard() {
               ) : (
                 <div className="space-y-4">
                   {myDeliveries?.map((order: any) => (
-                    <div key={order.id} className="p-4 border rounded-lg">
+                    <div
+                      key={order.id}
+                      className="p-4 border rounded-lg cursor-pointer hover:bg-accent/50 transition-colors"
+                      onClick={() => {
+                        setSelectedOrder(order);
+                        setIsFlowOpen(true);
+                      }}
+                    >
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <p className="font-semibold">{order.profiles.full_name}</p>
                           <p className="text-sm text-muted-foreground">{order.vendors.name}</p>
                         </div>
-                        <Badge>{order.status}</Badge>
+                        <Badge>{order.status.replace("_", " ")}</Badge>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <MapPin className="h-4 w-4" />
@@ -196,6 +245,17 @@ export default function RiderDashboard() {
           </Card>
         </div>
       </main>
+
+      {selectedOrder && (
+        <DeliveryFlow
+          order={selectedOrder}
+          isOpen={isFlowOpen}
+          onClose={() => {
+            setIsFlowOpen(false);
+            setSelectedOrder(null);
+          }}
+        />
+      )}
     </div>
   );
 }
