@@ -7,7 +7,13 @@ import { Package, DollarSign, Clock, Settings } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function VendorDashboard() {
-  const navigate = useNavigate();
+  const [userEmail, setUserEmail] = useState<string>("");
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserEmail(data.user?.email || "");
+    });
+  }, []);
 
   const { data: vendor } = useQuery({
     queryKey: ["my-vendor"],

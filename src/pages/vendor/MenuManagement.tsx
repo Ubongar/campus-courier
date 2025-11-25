@@ -19,11 +19,17 @@ import {
 } from "@/components/ui/dialog";
 
 export default function MenuManagement() {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [userEmail, setUserEmail] = useState<string>("");
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserEmail(data.user?.email || "");
+    });
+  }, []);
   const [formData, setFormData] = useState({
     name: "",
     description: "",

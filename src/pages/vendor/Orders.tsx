@@ -9,9 +9,15 @@ import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 
 export default function VendorOrders() {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [userEmail, setUserEmail] = useState<string>("");
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserEmail(data.user?.email || "");
+    });
+  }, []);
 
   const { data: vendor } = useQuery({
     queryKey: ["vendor-profile"],
