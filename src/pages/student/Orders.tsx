@@ -9,6 +9,13 @@ import { useEffect } from "react";
 
 export default function Orders() {
   const navigate = useNavigate();
+  const [userEmail, setUserEmail] = useState<string>("");
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserEmail(data.user?.email || "");
+    });
+  }, []);
   const queryClient = useQueryClient();
 
   const { data: orders, isLoading } = useQuery({

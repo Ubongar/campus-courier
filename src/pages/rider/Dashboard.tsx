@@ -3,18 +3,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
 import { Bike, DollarSign, MapPin, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import DeliveryFlow from "./DeliveryFlow";
+import { DashboardNav } from "@/components/DashboardNav";
 
 export default function RiderDashboard() {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isFlowOpen, setIsFlowOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>("");
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserEmail(data.user?.email || "");
+    });
+  }, []);
 
   const { data: riderProfile } = useQuery({
     queryKey: ["rider-profile"],
@@ -126,21 +132,14 @@ export default function RiderDashboard() {
     },
   });
 
+  const menuItems = [
+    { label: "Dashboard", href: "/rider/dashboard", icon: <Bike className="h-4 w-4" /> },
+    { label: "Deliveries", href: "/rider/dashboard", icon: <Package className="h-4 w-4" /> },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
-      <header className="bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Rider Dashboard</h1>
-            <Button
-              variant="ghost"
-              onClick={() => supabase.auth.signOut().then(() => navigate("/"))}
-            >
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+      <DashboardNav userEmail={userEmail} userRole="rider" menuItems={menuItems} />
 
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
