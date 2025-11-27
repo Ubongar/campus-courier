@@ -15,8 +15,25 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+interface Order {
+  id: string;
+  status: "assigned" | "picked_up" | "in_transit" | "delivered";
+  otp_code: string;
+  rider_id: string;
+  total_amount: number;
+  delivery_location: string;
+  delivery_notes?: string;
+  vendors: {
+    name: string;
+  };
+  profiles: {
+    full_name: string;
+    phone?: string;
+  };
+}
+
 interface DeliveryFlowProps {
-  order: any;
+  order: Order;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -27,10 +44,10 @@ export default function DeliveryFlow({ order, isOpen, onClose }: DeliveryFlowPro
   const [otpInput, setOtpInput] = useState("");
 
   const updateStatusMutation = useMutation({
-    mutationFn: async (status: string) => {
+    mutationFn: async (status: "assigned" | "picked_up" | "in_transit" | "delivered") => {
       const { error } = await supabase
         .from("orders")
-        .update({ status: status as any })
+        .update({ status })
         .eq("id", order.id);
 
       if (error) throw error;
@@ -50,7 +67,7 @@ export default function DeliveryFlow({ order, isOpen, onClose }: DeliveryFlowPro
 
       const { error } = await supabase
         .from("orders")
-        .update({ status: "delivered" as any })
+        .update({ status: "delivered" })
         .eq("id", order.id);
 
       if (error) throw error;
@@ -75,7 +92,7 @@ export default function DeliveryFlow({ order, isOpen, onClose }: DeliveryFlowPro
       toast({ title: "Delivery completed successfully!" });
       onClose();
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
         description: error.message,
@@ -157,6 +174,16 @@ export default function DeliveryFlow({ order, isOpen, onClose }: DeliveryFlowPro
               )}
             </CardContent>
           </Card>
+          <div className="grid grid-cols-2 gap-3 mb-4">
+  <Button variant="outline" className="w-full" onClick={() => window.open(`tel:${order.profiles?.phone || ''}`)}>
+    <Phone className="mr-2 h-4 w-4" />
+    Call Customer
+  </Button>
+  <Button variant="outline" className="w-full" onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.delivery_location)}`)}>
+    <MapPin className="mr-2 h-4 w-4" />
+    Open Maps
+  </Button>
+</div>
 
           {order.status === "in_transit" ? (
             <div className="space-y-4">
