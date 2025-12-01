@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,12 +8,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Utensils } from "lucide-react";
+import { Utensils, ArrowLeft } from "lucide-react";
 
 const Auth = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [role, setRole] = useState<string>("student");
   const navigate = useNavigate();
+  const location = useLocation();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Retrieve state passed from GetStarted page, or default to standard values
+  const defaultRole = location.state?.role || "student";
+  const defaultTab = location.state?.tab || "signin";
+
+  const [role, setRole] = useState<string>(defaultRole);
+  
+  // Update role if location state changes (though usually happens on mount)
+  useEffect(() => {
+    if (location.state?.role) {
+      setRole(location.state.role);
+    }
+  }, [location.state]);
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -49,7 +62,7 @@ const Auth = () => {
 
         if (roleError) throw roleError;
 
-        toast.success("Account created successfully!");
+        toast.success("Account created successfully! Please check your email.");
         
         // Redirect based on role
         if (role === "student") {
@@ -113,20 +126,39 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
-      <Card className="w-full max-w-md shadow-custom-lg relative backdrop-blur-sm bg-card/95">
-        <CardHeader className="text-center">
+      {/* Background decoration matching new design */}
+      <div className="absolute inset-0 bg-slate-900">
+        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+        <div className="absolute top-20 right-20 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 left-20 w-[500px] h-[500px] bg-accent/10 rounded-full blur-3xl" />
+      </div>
+
+      <Card className="w-full max-w-md shadow-2xl relative backdrop-blur-md bg-card/95 border-white/10">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="absolute left-4 top-4 text-muted-foreground hover:text-foreground"
+          onClick={() => navigate("/")}
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" /> Back
+        </Button>
+
+        <CardHeader className="text-center pt-10">
           <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-full bg-gradient-primary flex items-center justify-center">
-              <Utensils className="h-8 w-8 text-primary-foreground" />
+            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
+              <Utensils className="h-8 w-8 text-white" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold">Campus Food Delivery</CardTitle>
-          <CardDescription>Your favorite campus meals, delivered fast</CardDescription>
+          <CardTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+            Welcome to CFDS
+          </CardTitle>
+          <CardDescription className="text-base">
+            Your favorite campus meals, delivered fast
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+          <Tabs defaultValue={defaultTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
@@ -140,6 +172,7 @@ const Auth = () => {
                     name="email"
                     type="email"
                     placeholder="your.email@babcock.edu.ng"
+                    className="bg-background/50"
                     required
                   />
                 </div>
@@ -150,10 +183,11 @@ const Auth = () => {
                     name="password"
                     type="password"
                     placeholder="••••••••"
+                    className="bg-background/50"
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full h-11 text-base shadow-lg hover:shadow-primary/20 transition-all" disabled={isLoading}>
                   {isLoading ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
@@ -161,26 +195,31 @@ const Auth = () => {
 
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    name="fullName"
-                    type="text"
-                    placeholder="John Doe"
-                    required
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName">Full Name</Label>
+                    <Input
+                      id="fullName"
+                      name="fullName"
+                      type="text"
+                      placeholder="John Doe"
+                      className="bg-background/50"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      placeholder="0801 234 5678"
+                      className="bg-background/50"
+                      required
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    placeholder="+234 801 234 5678"
-                    required
-                  />
-                </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
                   <Input
@@ -188,9 +227,11 @@ const Auth = () => {
                     name="email"
                     type="email"
                     placeholder="your.email@babcock.edu.ng"
+                    className="bg-background/50"
                     required
                   />
                 </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
                   <Input
@@ -199,13 +240,15 @@ const Auth = () => {
                     type="password"
                     placeholder="••••••••"
                     minLength={6}
+                    className="bg-background/50"
                     required
                   />
                 </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="role">I am a...</Label>
                   <Select value={role} onValueChange={setRole}>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-background/50">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -215,7 +258,8 @@ const Auth = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
+
+                <Button type="submit" className="w-full h-11 text-base shadow-lg hover:shadow-primary/20 transition-all" disabled={isLoading}>
                   {isLoading ? "Creating account..." : "Create Account"}
                 </Button>
               </form>

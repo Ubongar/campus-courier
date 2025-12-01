@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import GetStarted from "./pages/GetStarted";
 
 // Student Pages
 import Browse from "./pages/student/Browse";
@@ -97,6 +98,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/get-started" element={<GetStarted/>} />
           
           {/* Student Routes */}
           <Route path="/student/browse" element={<ProtectedRoute allowedRoles={["student"]}><Browse /></ProtectedRoute>} />
