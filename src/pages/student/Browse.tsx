@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { DashboardNav } from "@/components/DashboardNav";
 import { Star, Search, MapPin, Store, Clock, Utensils,ShoppingCart, Package, UserCircle, Heart, Filter} from "lucide-react";
 import { cn } from "@/lib/utils";
+import SupportChat from "@/components/SupportChat";
 
 export default function Browse() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -161,6 +162,8 @@ export default function Browse() {
           </div>
         )}
       </main>
+      
+      <SupportChat />
     </div>
   );
 }

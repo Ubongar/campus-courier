@@ -1,94 +1,181 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardNav } from "@/components/DashboardNav";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, ArrowUpRight, ArrowDownLeft, Wallet as WalletIcon, History } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { CreditCard, Plus, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
-export default function Wallet() {
-  const navigate = useNavigate();
+export default function StudentWallet() {
+  const [userEmail, setUserEmail] = useState<string>("");
+  const [amount, setAmount] = useState("");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Mock data for UI demonstration - connect to 'wallet_transactions' table later
-  const transactions = [
-    { id: 1, type: 'debit', amount: 2500, description: 'Order #ORD-2024-001', date: '2024-03-20 14:30', status: 'success' },
-    { id: 2, type: 'credit', amount: 10000, description: 'Wallet Top-up', date: '2024-03-19 09:00', status: 'success' },
-    { id: 3, type: 'debit', amount: 1200, description: 'Order #ORD-2024-002', date: '2024-03-18 12:15', status: 'success' },
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserEmail(data.user?.email || "");
+    });
+  }, []);
+
+  const { data: wallet } = useQuery({
+    queryKey: ["student-wallet"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase
+        .from("wallets")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (error && error.code === "PGRST116") {
+        // Create wallet if doesn't exist
+        const { data: newWallet } = await supabase
+          .from("wallets")
+          .insert({ user_id: user.id, balance: 0 })
+          .select()
+          .single();
+        return newWallet;
+      }
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: transactions } = useQuery({
+    queryKey: ["student-transactions", wallet?.id],
+    queryFn: async () => {
+      if (!wallet) return [];
+      const { data } = await supabase
+        .from("transactions")
+        .select("*")
+        .eq("wallet_id", wallet.id)
+        .order("created_at", { ascending: false });
+      return data;
+    },
+    enabled: !!wallet,
+  });
+
+  const addFunds = useMutation({
+    mutationFn: async (amountToAdd: number) => {
+      if (!wallet) throw new Error("Wallet not found");
+      
+      // Mock payment - in production, integrate with Paystack
+      const { error: transError } = await supabase.from("transactions").insert({
+        wallet_id: wallet.id,
+        type: "credit",
+        amount: amountToAdd,
+        status: "completed",
+        description: "Wallet top-up (Mock Payment)",
+      });
+
+      if (transError) throw transError;
+
+      const { error: walletError } = await supabase
+        .from("wallets")
+        .update({ balance: wallet.balance + amountToAdd })
+        .eq("id", wallet.id);
+
+      if (walletError) throw walletError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["student-wallet"] });
+      queryClient.invalidateQueries({ queryKey: ["student-transactions"] });
+      toast({ title: "Funds added successfully!" });
+      setAmount("");
+    },
+  });
+
+  const menuItems = [
+    { label: "Browse", href: "/student/browse" },
+    { label: "Orders", href: "/student/orders" },
+    { label: "Wallet", href: "/student/wallet" },
+    { label: "Profile", href: "/student/profile" },
   ];
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <header className="bg-background border-b sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate("/student/browse")}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back
-          </Button>
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+      <DashboardNav userEmail={userEmail} userRole="student" menuItems={menuItems} />
+
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">My Wallet</h1>
+          <p className="text-muted-foreground">Manage your funds and transactions</p>
         </div>
-      </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-2xl space-y-6">
-        <h1 className="text-3xl font-bold">My Wallet</h1>
-
-        {/* Balance Card */}
-        <Card className="bg-primary text-primary-foreground border-none shadow-xl overflow-hidden relative">
-          <div className="absolute right-0 top-0 h-32 w-32 bg-white/10 rounded-bl-full" />
-          <CardContent className="p-8 space-y-6 relative z-10">
-            <div className="flex items-center gap-2 opacity-90">
-              <WalletIcon className="h-5 w-5" />
-              <span className="font-medium">Available Balance</span>
-            </div>
-            <div>
-              <h2 className="text-5xl font-bold tracking-tight">₦6,300.00</h2>
-            </div>
-            <div className="flex gap-3 pt-2">
-              <Button variant="secondary" className="font-semibold shadow-sm hover:bg-white/90">
-                <Plus className="mr-2 h-4 w-4" /> Fund Wallet
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Wallet Balance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-4xl font-bold mb-6">₦{wallet?.balance.toFixed(2) || "0.00"}</div>
+            
+            <div className="flex gap-4">
+              <Input
+                type="number"
+                placeholder="Enter amount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="max-w-[200px]"
+              />
+              <Button
+                onClick={() => amount && addFunds.mutate(parseFloat(amount))}
+                disabled={!amount || addFunds.isPending}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Funds (Mock)
               </Button>
             </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Payment integration will be completed soon
+            </p>
           </CardContent>
         </Card>
 
-        {/* Transaction History */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <History className="h-5 w-5 text-muted-foreground" /> Recent Transactions
-            </h3>
-            <Button variant="link" className="text-sm">View All</Button>
-          </div>
-
-          <Card>
-            <CardContent className="p-0">
-              {transactions.map((tx, index) => (
-                <div 
-                  key={tx.id} 
-                  className={`flex items-center justify-between p-4 ${index !== transactions.length - 1 ? 'border-b' : ''}`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                      tx.type === 'credit' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-                    }`}>
-                      {tx.type === 'credit' ? <ArrowDownLeft className="h-5 w-5" /> : <ArrowUpRight className="h-5 w-5" />}
-                    </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Transaction History</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {transactions?.map((trans: any) => (
+                <div key={trans.id} className="flex justify-between items-center p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    {trans.type === "credit" ? (
+                      <ArrowDownRight className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <ArrowUpRight className="h-5 w-5 text-red-500" />
+                    )}
                     <div>
-                      <p className="font-medium text-sm">{tx.description}</p>
-                      <p className="text-xs text-muted-foreground">{tx.date}</p>
+                      <p className="font-medium">{trans.description || trans.type}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(trans.created_at).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className={`font-bold ${tx.type === 'credit' ? 'text-green-600' : 'text-foreground'}`}>
-                      {tx.type === 'credit' ? '+' : '-'}₦{tx.amount.toLocaleString()}
-                    </span>
-                    <div>
-                       <Badge variant="outline" className="text-[10px] h-5 px-1 uppercase">{tx.status}</Badge>
-                    </div>
+                    <p className={`font-semibold ${trans.type === "credit" ? "text-green-500" : "text-red-500"}`}>
+                      {trans.type === "credit" ? "+" : "-"}₦{trans.amount.toFixed(2)}
+                    </p>
+                    <Badge variant="outline" className="text-xs">{trans.status}</Badge>
                   </div>
                 </div>
               ))}
-            </CardContent>
-          </Card>
-        </div>
+              {!transactions?.length && (
+                <p className="text-center text-muted-foreground py-8">No transactions yet</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
