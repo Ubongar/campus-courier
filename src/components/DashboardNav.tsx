@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { Utensils, User, LogOut, Menu as MenuIcon, Bell, Wallet } from "lucide-react";
+import { Utensils, User, LogOut, Menu as MenuIcon, Wallet } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import NotificationBell from "@/components/NotificationBell";
 
 interface DashboardNavProps {
   userEmail?: string;
@@ -70,23 +70,8 @@ export function DashboardNav({ userEmail, userRole, menuItems = [] }: DashboardN
               <span className="text-sm font-semibold">₦2,500.00</span>
             </div>
 
-            {/* Notifications (Feature Addition) */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full animate-pulse" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80 p-0" align="end">
-                <div className="p-4 border-b">
-                  <h4 className="font-semibold">Notifications</h4>
-                </div>
-                <div className="p-4 text-center text-sm text-muted-foreground">
-                  No new notifications
-                </div>
-              </PopoverContent>
-            </Popover>
+            {/* Notifications */}
+            <NotificationBell />
 
             {/* Mobile Menu Trigger */}
             {menuItems.length > 0 && (

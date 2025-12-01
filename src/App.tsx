@@ -20,9 +20,24 @@ import StudentProfile from "./pages/student/Profile";
 import VendorDashboard from "./pages/vendor/Dashboard";
 import MenuManagement from "./pages/vendor/MenuManagement";
 import VendorOrders from "./pages/vendor/Orders";
+import VendorProfile from "./pages/vendor/Profile";
 
 // Rider Pages
 import RiderDashboard from "./pages/rider/Dashboard";
+import RiderTracking from "./pages/rider/Tracking";
+import RiderEarnings from "./pages/rider/Earnings";
+import RiderDeliveryHistory from "./pages/rider/DeliveryHistory";
+
+// Admin Pages
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminOrders from "./pages/admin/Orders";
+import AdminAnalytics from "./pages/admin/Analytics";
+import AdminUsers from "./pages/admin/Users";
+import AdminVendors from "./pages/admin/Vendors";
+import AdminRiders from "./pages/admin/Riders";
+
+// Student Pages
+import StudentWallet from "./pages/student/Wallet";
 
 const queryClient = new QueryClient();
 
@@ -94,9 +109,24 @@ const App = () => (
           <Route path="/vendor/dashboard" element={<ProtectedRoute allowedRoles={["vendor"]}><VendorDashboard /></ProtectedRoute>} />
           <Route path="/vendor/menu" element={<ProtectedRoute allowedRoles={["vendor"]}><MenuManagement /></ProtectedRoute>} />
           <Route path="/vendor/orders" element={<ProtectedRoute allowedRoles={["vendor"]}><VendorOrders /></ProtectedRoute>} />
+          <Route path="/vendor/profile" element={<ProtectedRoute allowedRoles={["vendor"]}><VendorProfile /></ProtectedRoute>} />
           
           {/* Rider Routes */}
           <Route path="/rider/dashboard" element={<ProtectedRoute allowedRoles={["rider"]}><RiderDashboard /></ProtectedRoute>} />
+          <Route path="/rider/tracking" element={<ProtectedRoute allowedRoles={["rider"]}><RiderTracking /></ProtectedRoute>} />
+          <Route path="/rider/earnings" element={<ProtectedRoute allowedRoles={["rider"]}><RiderEarnings /></ProtectedRoute>} />
+          <Route path="/rider/history" element={<ProtectedRoute allowedRoles={["rider"]}><RiderDeliveryHistory /></ProtectedRoute>} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin/orders" element={<ProtectedRoute allowedRoles={["admin"]}><AdminOrders /></ProtectedRoute>} />
+          <Route path="/admin/analytics" element={<ProtectedRoute allowedRoles={["admin"]}><AdminAnalytics /></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute allowedRoles={["admin"]}><AdminUsers /></ProtectedRoute>} />
+          <Route path="/admin/vendors" element={<ProtectedRoute allowedRoles={["admin"]}><AdminVendors /></ProtectedRoute>} />
+          <Route path="/admin/riders" element={<ProtectedRoute allowedRoles={["admin"]}><AdminRiders /></ProtectedRoute>} />
+
+          {/* Student Wallet */}
+          <Route path="/student/wallet" element={<ProtectedRoute allowedRoles={["student"]}><StudentWallet /></ProtectedRoute>} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>
