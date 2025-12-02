@@ -51,6 +51,7 @@ export default function Browse() {
     { label: "Browse", href: "/student/browse", icon: <Store className="h-4 w-4" /> },
     { label: "Cart", href: "/student/cart", icon: <ShoppingCart className="h-4 w-4" /> },
     { label: "Orders", href: "/student/orders", icon: <Package className="h-4 w-4" /> },
+    { label: "Scheduled", href: "/student/scheduled", icon: <Clock className="h-4 w-4" /> },
     { label: "Wallet", href: "/student/wallet", icon: <Wallet className="h-4 w-4" /> },
     { label: "Profile", href: "/student/profile", icon: <UserCircle className="h-4 w-4" /> },
   ];

@@ -3,21 +3,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Package, DollarSign, Clock, Settings } from "lucide-react";
+import { Package, DollarSign, Clock, Settings, Utensils, User, BarChart3 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
+import { DashboardNav } from "@/components/DashboardNav";
+import { VendorOnboarding } from "@/components/VendorOnboarding";
 
 export default function VendorDashboard() {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUserEmail(data.user?.email || "");
+      setUserId(data.user?.id || "");
     });
   }, []);
 
-  const { data: vendor } = useQuery({
+  const { data: vendor, refetch: refetchVendor } = useQuery({
     queryKey: ["my-vendor"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -33,6 +38,13 @@ export default function VendorDashboard() {
       return data;
     },
   });
+
+  // Check if vendor needs onboarding (name is default or empty)
+  useEffect(() => {
+    if (vendor && (!vendor.name || vendor.name === "New vendor on campus" || vendor.description === "New vendor on campus")) {
+      setShowOnboarding(true);
+    }
+  }, [vendor]);
 
   const { data: orders } = useQuery({
     queryKey: ["vendor-orders", vendor?.id],
@@ -59,29 +71,30 @@ export default function VendorDashboard() {
     ?.filter((o) => new Date(o.created_at).toDateString() === new Date().toDateString())
     .reduce((sum, o) => sum + Number(o.total_amount), 0) || 0;
 
+  const menuItems = [
+    { label: "Dashboard", href: "/vendor/dashboard", icon: <BarChart3 className="h-4 w-4" /> },
+    { label: "Menu", href: "/vendor/menu", icon: <Utensils className="h-4 w-4" /> },
+    { label: "Orders", href: "/vendor/orders", icon: <Package className="h-4 w-4" /> },
+    { label: "Profile", href: "/vendor/profile", icon: <User className="h-4 w-4" /> },
+  ];
+
+  // Show onboarding if needed
+  if (showOnboarding && vendor) {
+    return (
+      <VendorOnboarding
+        userId={userId}
+        vendorId={vendor.id}
+        onComplete={() => {
+          setShowOnboarding(false);
+          refetchVendor();
+        }}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
-      <header className="bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">{vendor?.name || "Vendor Dashboard"}</h1>
-            <div className="flex gap-2">
-              <Button variant="ghost" onClick={() => navigate("/vendor/menu")}>
-                Menu
-              </Button>
-              <Button variant="ghost" onClick={() => navigate("/vendor/orders")}>
-                Orders
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => supabase.auth.signOut().then(() => navigate("/"))}
-              >
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+      <DashboardNav userEmail={userEmail} userRole="vendor" menuItems={menuItems} />
 
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

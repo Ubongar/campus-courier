@@ -402,6 +402,83 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          menu_item_id: string
+          quantity: number
+          scheduled_order_id: string
+          special_instructions: string | null
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          menu_item_id: string
+          quantity?: number
+          scheduled_order_id: string
+          special_instructions?: string | null
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          menu_item_id?: string
+          quantity?: number
+          scheduled_order_id?: string
+          special_instructions?: string | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_order_items_scheduled_order_id_fkey"
+            columns: ["scheduled_order_id"]
+            isOneToOne: false
+            referencedRelation: "scheduled_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheduled_orders: {
+        Row: {
+          created_at: string
+          customer_id: string
+          delivery_location: string
+          delivery_notes: string | null
+          id: string
+          scheduled_for: string
+          status: string
+          total_amount: number
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          delivery_location: string
+          delivery_notes?: string | null
+          id?: string
+          scheduled_for: string
+          status?: string
+          total_amount: number
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          delivery_location?: string
+          delivery_notes?: string | null
+          id?: string
+          scheduled_for?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
