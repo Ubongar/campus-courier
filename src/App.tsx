@@ -39,6 +39,7 @@ import AdminRiders from "./pages/admin/Riders";
 
 // Student Pages
 import StudentWallet from "./pages/student/Wallet";
+import ScheduledOrders from "./pages/student/ScheduledOrders";
 
 const queryClient = new QueryClient();
 
@@ -84,6 +85,11 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode;
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (!user) return <Navigate to="/auth" />;
+  
+  // Admin can access all routes
+  if (userRole === "admin") return <>{children}</>;
+  
+  // Other users can only access their allowed routes
   if (userRole && !allowedRoles.includes(userRole)) return <Navigate to="/" />;
 
   return <>{children}</>;
@@ -127,8 +133,9 @@ const App = () => (
           <Route path="/admin/vendors" element={<ProtectedRoute allowedRoles={["admin"]}><AdminVendors /></ProtectedRoute>} />
           <Route path="/admin/riders" element={<ProtectedRoute allowedRoles={["admin"]}><AdminRiders /></ProtectedRoute>} />
 
-          {/* Student Wallet */}
+          {/* Student Wallet & Scheduled Orders */}
           <Route path="/student/wallet" element={<ProtectedRoute allowedRoles={["student"]}><StudentWallet /></ProtectedRoute>} />
+          <Route path="/student/scheduled" element={<ProtectedRoute allowedRoles={["student"]}><ScheduledOrders /></ProtectedRoute>} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>
