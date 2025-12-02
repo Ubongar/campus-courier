@@ -242,7 +242,7 @@ const Index = () => {
               <Button size="lg" onClick={() => navigate("/auth")} className="text-lg h-14 px-8 rounded-full bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20">
                 Order Now <ChevronRight className="ml-2 h-5 w-5" />
               </Button>
-              <Button size="lg" variant="outline" className="text-lg h-14 px-8 rounded-full bg-white/5 border-white/20 text-white hover:bg-white/10 backdrop-blur-sm">
+              <Button size="lg" variant="outline" onClick={() => navigate("/student/browse")} className="text-lg h-14 px-8 rounded-full bg-white/5 border-white/20 text-white hover:bg-white/10 backdrop-blur-sm">
                 View Vendors
               </Button>
             </motion.div>
