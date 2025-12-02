@@ -8,9 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router-dom";
 import { DashboardNav } from "@/components/DashboardNav";
-import { Star, Search, MapPin, Store, Clock, Utensils,ShoppingCart, Package, UserCircle, Heart, Filter} from "lucide-react";
+import { Star, Search, MapPin, Store, Clock, Utensils,ShoppingCart, Package, UserCircle, Heart, Filter, Wallet} from "lucide-react";
 import { cn } from "@/lib/utils";
 import SupportChat from "@/components/SupportChat";
+import AIRecommendations from "@/components/AIRecommendations";
 
 export default function Browse() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -50,6 +51,7 @@ export default function Browse() {
     { label: "Browse", href: "/student/browse", icon: <Store className="h-4 w-4" /> },
     { label: "Cart", href: "/student/cart", icon: <ShoppingCart className="h-4 w-4" /> },
     { label: "Orders", href: "/student/orders", icon: <Package className="h-4 w-4" /> },
+    { label: "Wallet", href: "/student/wallet", icon: <Wallet className="h-4 w-4" /> },
     { label: "Profile", href: "/student/profile", icon: <UserCircle className="h-4 w-4" /> },
   ];
 
@@ -92,6 +94,9 @@ export default function Browse() {
             ))}
           </div>
         </div>
+
+        {/* AI Recommendations Section */}
+        <AIRecommendations />
 
         {/* Vendors Grid */}
         {isLoading ? (

@@ -65,14 +65,21 @@ const Auth = () => {
         toast.success("Account created successfully! Please check your email.");
         
         // Redirect based on role
-        if (role === "student") {
-          navigate("/student/browse");
-        } else if (role === "vendor") {
-          navigate("/vendor/dashboard");
-        } else if (role === "rider") {
-          navigate("/rider/dashboard");
-        } else {
-          navigate("/");
+        switch (role) {
+          case "student":
+            navigate("/student/browse", { replace: true });
+            break;
+          case "vendor":
+            navigate("/vendor/dashboard", { replace: true });
+            break;
+          case "rider":
+            navigate("/rider/dashboard", { replace: true });
+            break;
+          case "admin":
+            navigate("/admin/dashboard", { replace: true });
+            break;
+          default:
+            navigate("/", { replace: true });
         }
       }
     } catch (error: any) {
@@ -99,23 +106,41 @@ const Auth = () => {
       if (error) throw error;
 
       // Get user role to redirect appropriately
-      const { data: roleData } = await supabase
+      const { data: roleData, error: roleError } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", data.user.id)
         .single();
       
+      if (roleError) {
+        console.error("Error fetching role:", roleError);
+        toast.error("Could not determine user role. Please contact support.");
+        setIsLoading(false);
+        return;
+      }
+      
       toast.success("Welcome back!");
       
       // Redirect based on role
-      if (roleData?.role === "student") {
-        navigate("/student/browse");
-      } else if (roleData?.role === "vendor") {
-        navigate("/vendor/dashboard");
-      } else if (roleData?.role === "rider") {
-        navigate("/rider/dashboard");
-      } else {
-        navigate("/");
+      const userRole = roleData?.role;
+      console.log("User role detected:", userRole);
+      
+      switch (userRole) {
+        case "student":
+          navigate("/student/browse", { replace: true });
+          break;
+        case "vendor":
+          navigate("/vendor/dashboard", { replace: true });
+          break;
+        case "rider":
+          navigate("/rider/dashboard", { replace: true });
+          break;
+        case "admin":
+          navigate("/admin/dashboard", { replace: true });
+          break;
+        default:
+          console.warn("Unknown role:", userRole);
+          navigate("/", { replace: true });
       }
     } catch (error: any) {
       toast.error(error.message);
